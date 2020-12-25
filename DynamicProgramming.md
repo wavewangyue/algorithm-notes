@@ -1,8 +1,121 @@
 # Dynamic Programming Questions
 
-* 拥有最大和的连续子串：O(n) 扫描，s=max(s+a[i], a[i])
-* 最长回文子串：马拉车算法，O(n)，将字符串 s 用 len(s)+1 个 # 补全为奇数长度，设 id 与 mx 为已经发现的最靠右的回文串，p[i]=p[2*id-i]，然后扫描扩张 p[i]
-* 零钱兑换（不同面值硬币组成规定总额，硬币无限）：O(n*m)，dp[i]=min(dp[i-coin]+1, dp[i])
-* 零钱兑换（不同面值硬币组成规定总额，硬币一次）：O(n*m)，dp[i,j]=dp[i-1, j] if c[i]>j else dp[i,j-[c[i]]] or dp[i-1,j]
-* 最长上升子序列：O(n*logn)，其中 O(n) 扫描，O(logn) 二分查找，LIS = LIS+[num] if num > LIS[-1] else LIS[find(>num)] = num
-* 最小M段和（N个数分M段，段和最大值最小）：O(n*m*n)，d[i,j]=min{max{dp[i,1]-dp[k,1],dp[k,j-1]}}
+## 1. 最大子序和
+
+给定数组 nums ，找到一个具有最大和的连续子数组
+
+`O(n)` 状态转移函数 `f[i] = max(f[i-1] + a[i], a[i])`
+
+```python
+f_max = f_go = nums[0];  
+for i in range(1, len(nums)):  
+   f_go = max(f_go + nums[i], nums[i])  
+   if f_go > f_max: f_max = f_go
+```
+
+## 2. 零钱兑换
+
+不同面值硬币组成规定总额，硬币个数无限，即完全背包问题
+
+`O(n*m)` 状态转移函数 `dp[i] = min(dp[i-coin] + 1, dp[i])`
+
+```python
+def coinChange(self, coins, amount):
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0
+    for coin in coins:
+        for i in range(coin, amount + 1):
+            dp[i] = min(dp[i-coin] + 1, dp[i])
+    return dp[amount]
+```
+
+不同面值硬币组成规定总额，每种硬币仅一个，即0-1背包问题
+
+`O(n*m)` 假设使用第 i 个硬币来组成面值 j，则状态转移函数 `dp[i,j] = min(dp[i,j-[coins[i]]], dp[i-1,j])`
+
+```python
+def coinChange(self, coins, amount):
+    dp = [[float('inf')] * (amount + 1) for _ in coins]
+    for i in range(len(coins)):
+        dp[i][0] = 0
+        for j in range(1, amount + 1):
+            if coins[i] > j:
+                dp[i][j] = dp[i-1][j]
+            else:
+                dp[i][j] = min(dp[i][j-[coins[i]]] + 1, dp[i-1][j])
+    return dp[len(coins)-1][amount]
+```
+
+## 3. 编辑距离
+
+`O(n*m)` 状态转移函数 `dp[i,j] = min(dp[i-1,j] + 1, dp[i,j-1] + 1, dp[i-1,j-1] + 1)`
+
+```python
+def Levenshtein_Distance(str1, str2):
+    dp = [[i + j for j in range(len(str2)+1)] for i in range(len(str1)+1)]
+    for i in range(1, len(str1)+1):
+        for j in range(1, len(str2)+1):
+            if(str1[i-1] == str2[j-1]):
+                d = 0
+            else:
+                d = 1
+            dp[i][j] = min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+d)
+    return dp[len(str1)][len(str2)]
+```
+
+## 4. 最长上升子序列
+
+找到数组中最长的数值递增的子序列（子序列 ≠ 子串，不一定是连续的）
+
+`O(n*logn)` 从左往右 O(n) 扫描，设当前最长子序列为 LIS，如果 num 比 LIS[-1] 大则直接入队，如果 num 比 LIS[-1] 小则 O(logn) 二分查找 LIS 中第一个比 num 大的数替换为 num
+
+```python
+def lengthOfLIS(nums):
+    b = []
+    for num in nums:
+        if (b == []) or (num > b[-1]):
+            b.append(num)
+        elif num < b[-1]:
+            b[find(b, num)] = num
+    return len(b)
+
+def find(nums,obj):
+    l = 0
+    r = len(nums) - 1
+    while l <= r:
+        mid = (l + r) / 2
+        if nums[mid] < obj:
+            l = mid + 1
+        else:
+            r = mid - 1
+    return l
+```
+
+## 5. 最长回文子串
+
+给定字符串 s，找到 s 中最长的回文子串
+
+`O(n)` 马拉车算法，从左往右走，设 center 与 right 为已经发现的最靠右的回文串的中心与右边界，i 关于 center 的镜像点为 2\*center-i，则 `p[i]=p[2*center-i]`，如果 i 超出了 right，则从 i 开始重新扩张找回文串
+
+```python
+def longestPalindrome(self,s):
+    s_plus = "#"
+    for c in s:
+        s_plus += c + "#" # 用 # 将字符串 s 用补全为奇数长度的 s_plus
+    p = [1] * len(s_plus)
+    center = 0
+    right = 0
+    max_center = 0
+    for i in range(len(s_plus)):
+        p[i] = min(p[2 * center - i], right - i) if right > i else 1
+        while (i + p[i] < len(s_plus)) and (i - p[i] >= 0) and (s_plus[i + p[i]] == s_plus[i - p[i]]):
+            p[i] += 1
+        if i + p[i] > right:
+            right = i + p[i]
+            center = i
+        if p[i] > p[max_center]:
+            max_center = i
+    max_left = max_center - p[max_center] + 1
+    max_right = max_center + p[max_center] - 1
+    return s_plus[max_left:max_right+1].replace("#", "")
+```
