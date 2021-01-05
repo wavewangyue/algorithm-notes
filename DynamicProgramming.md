@@ -1,52 +1,49 @@
 # Dynamic Programming Questions
 
-## 1. 最大子序和
+## 1. 背包问题
 
-给定数组 nums ，找到一个具有最大和的连续子数组
+背包问题：有一个背包，背包承重有限。有一堆物品，每个物品有各自的重量与价值。求能放进背包里面的物品的最大总价值
 
-`O(n)` 状态转移函数 `f[i] = max(f[i-1] + a[i], a[i])`
+**完全背包问题**：每种物品可以使用无限次
 
-```python
-f_max = f_go = nums[0];  
-for i in range(1, len(nums)):  
-   f_go = max(f_go + nums[i], nums[i])  
-   if f_go > f_max: f_max = f_go
-```
-
-## 2. 零钱兑换
-
-不同面值硬币组成规定总额，硬币个数无限，即完全背包问题
-
-`O(n*m)` 状态转移函数 `dp[i] = min(dp[i-coin] + 1, dp[i])`
+`O(n*m)` 假设把第 i 件物品放进空间 j 的包中，状态转移函数 `f[j] = max(f[j], f[j-weight[i]] + value[i])`
 
 ```python
-def coinChange(self, coins, amount):
-    dp = [float('inf')] * (amount + 1)
-    dp[0] = 0
-    for coin in coins:
-        for i in range(coin, amount + 1):
-            dp[i] = min(dp[i-coin] + 1, dp[i])
-    return dp[amount]
+# n = 物品个数
+# m = 背包空间
+# weight[] = 物品尺寸列表
+# value[] = 物品价值列表
+for i in range(1, n+1):
+    for j in range(weight[i], m+1):
+        f[j] = max(f[j], f[j-weight[i]] + value[i])
 ```
 
-不同面值硬币组成规定总额，每种硬币仅一个，即0-1背包问题
+**01背包问题**：每种物品仅可使用一次
 
-`O(n*m)` 假设使用第 i 个硬币来组成面值 j，则状态转移函数 `dp[i,j] = min(dp[i,j-[coins[i]]], dp[i-1,j])`
+`O(n*m)` 二维数组，通过第一维来防止重复使用，状态转移函数 `f[i][j] = max(f[i-1][j], f[i-1][j-weights[i]] + values[i])`
 
 ```python
-def coinChange(self, coins, amount):
-    dp = [[float('inf')] * (amount + 1) for _ in coins]
-    for i in range(len(coins)):
-        dp[i][0] = 0
-        for j in range(1, amount + 1):
-            if coins[i] > j:
-                dp[i][j] = dp[i-1][j]
-            else:
-                dp[i][j] = min(dp[i][j-[coins[i]]] + 1, dp[i-1][j])
-    return dp[len(coins)-1][amount]
+for i in range(n+1):
+    for j in range(m+1):
+        if weights[i] > j:
+            f[i][j] = f[i-1][j]
+        else:
+            f[i][j] = max(f[i-1][j], f[i-1][j-weights[i]] + values[i])
 ```
 
-## 3. 编辑距离
+也可以写成完全背包那种简洁的一维数组形式，仅需要把 j 循环倒过来，具体原因难以言表
+
+```python
+for i in range(1, n+1):
+    for j in range(m, weight[i]-1, -1):
+        f[j] = max(f[j], f[j-weight[i]] + value[i])
+```
+
+**多重背包问题**：每种物品可使用有限次，转化成01背包问题即可
+
+## 2. 编辑距离
+
+求两个字符串的编辑距离，编辑分三种：增加，删除，修改
 
 `O(n*m)` 状态转移函数 `dp[i,j] = min(dp[i-1,j] + 1, dp[i,j-1] + 1, dp[i-1,j-1] + 1)`
 
@@ -63,7 +60,7 @@ def Levenshtein_Distance(str1, str2):
     return dp[len(str1)][len(str2)]
 ```
 
-## 4. 最长上升子序列
+## 3. 最长上升子序列
 
 找到数组中最长的数值递增的子序列（子序列 ≠ 子串，不一定是连续的）
 
@@ -91,7 +88,7 @@ def find(nums,obj):
     return l
 ```
 
-## 5. 最长回文子串
+## 4. 最长回文子串
 
 给定字符串 s，找到 s 中最长的回文子串
 
