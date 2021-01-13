@@ -2,32 +2,118 @@
 
 ## 1. 寻找中位数
 
-或者寻找第K大的数
+#### a. 单个无序数组
 
-`O(n) < O < O(nlogn)` 快排思想，先随机找基准，将数分为大小两部分，再分治，直到基准值下标在所需位置
+寻找中位数，或者寻找第 K 小的数
+
+`O(n) < O < O(nlogn)` 快排思想（二分思想），先随机找基准，将数分为大小两部分，再分治，直到基准值下标在所需位置
 
 ```python
-def sub(self, nums, start, end, k):
-        i, j = start, end
-        tmp = nums[(start + end) // 2]
-        while i < j:
-            while (i < j) and (nums[i] < tmp):
+n = len(nums)
+if n % 2 == 1: # 长度是奇数，中位数是中间数
+    return find(nums, (n+1)//2)
+else: # 长度是偶数，中位数是中间两数的平均数
+    return (find(nums, n//2) + find(nums, n//2+1)) / 2.0
+
+def find(nums, k): # 寻找第 K 小的数
+    left = 0
+    right = len(nums) - 1
+    while left < right:
+        tmp = nums[(left + right) // 2]
+        i, j = left, right
+        while (i < j) and (nums[i] < tmp): i += 1
+        while (i < j) and (nums[j] > tmp): j -= 1
+        if i < j:
+            if nums[i] == nums[j]:
                 i += 1
-            while (i < j) and (nums[j] > tmp):
-                j -= 1
-            if i < j:
-                if nums[i] == nums[j]:
-                    i += 1
-                else:
-                    nums[i], nums[j] = nums[j], nums[i]
-        maxK_now = end + 1 - i
-        if maxK_now == k:
-            return tmp
-        elif maxK_now > k:
-            return self.sub(nums, i+1, end, k)    
+            else:
+                nums[i], nums[j] = nums[j], nums[i] # 交换nums[i]与nums[j]
+        if i < k: # 整个数组里 i 左边的数都比 tmp 小
+            left = i + 1
+        elif i > k:
+            right = i - 1
         else:
-            return self.sub(nums, start, i-1, k-maxK_now)
+            return tmp
 ```
+
+#### b. 两个有序数组
+
+两个递增数组，合并到一起寻找中位数
+
+`O(logn)` 也是二分思想，二分的不是下标，而是 k。两个数组分别设指针从左往右滑，每次滑动不超过 k/2
+
+```python
+def find(self, nums1, nums2, k): # 在两个有序数组中寻找第 K 小的数
+    n1, n2 = len(nums1), len(nums2)
+    i1 = i2 = 0
+    while True:
+        if i1 == n1: # nums1 到头了，需要在 nums2 再找 k-1 个数
+            return nums2[i2 + k - 1]
+        if i2 == n2: # nums2 到头了，需要在 nums1 再找 k-1 个数
+            return nums1[i1 + k - 1]
+        if k == 1: # 此时只需要找最小的数了
+            return min(nums1[i1], nums2[i2])
+        # 两个指针往右滑动，不超过 k/2
+        half_k = k // 2
+        j1 = min(i1 + half_k, n1) - 1
+        j2 = min(i2 + half_k, n2) - 1
+        if nums1[j1] <= nums2[j2]:
+            k -= j1 + 1 - i1
+            i1 = j1 + 1
+        else:
+            k -= j2 + 1 - i2
+            i2 = j2 + 1
+```
+
+#### c. 有序矩阵
+
+矩阵中每行每列都是递增的，寻找矩阵中的中位数
+
+`O(n) < O < O(nlogn)` 也是二分思想，但是二分的不是下标，而是数值。每次找到基准后，需要统计整个矩阵中小于基准值的元素个数
+
+```python
+matrix = [
+   [ 1,  5,  9],
+   [10, 11, 13],
+   [12, 13, 15]
+] # 方阵
+
+def find(matrix, k): # 在矩阵中寻找第 K 小的数
+    n = len(matrix)
+    left = matrix[0][0]
+    right = matrix[n-1][n-1]
+    while left < right:
+        mid = (left + right) // 2
+        ct = self.count(mid, matrix, n)
+        if ct < k:
+            left = mid + 1
+        # 如果 ct=k 时不能直接返回mid，因为mid有可能不存在于矩阵中，只有mid的ct=k且mid-1的ct<k的时，mid才一定在矩阵中
+        else:
+            right = mid
+    return left
+
+def count(mid, matrix, n): # 利用矩阵递增规律，从矩阵左下往右上统计
+    i = n - 1
+    j = 0
+    ct = 0
+    while i >= 0 and j < n:
+        if matrix[i][j] <= mid:
+            ct += i + 1
+            j += 1 # 遇到小数，往右走
+        else:
+            i -= 1 # 遇到大数，往上走
+    return ct
+```
+
+#### d. 数据流
+
+给定一串操作序列，每个时刻的操作包含两种可能：（1）新增元素（2）查看此时的中位数
+
+三种方案：
+- `O(n)` 插入排序思想，维护一个有序数组，通过二分查找将新元素插入到合适位置。由于需要向数组中插数，数组平移，插入操作复杂度略高
+- `O(logn)` 维护两个堆，一个最大堆，一个最小堆，同时维持两个堆的平衡，当一个堆较大时就往另一个堆传数，维持中位数始终在堆顶
+- `O(logn)` 平衡二叉树，维持根节点是中位数
+
 
 ## 2. 盛最多水的容器
 
@@ -90,4 +176,27 @@ def findDuplicate(self, nums):
         else:
             r = p - 1
     return l
+```
+
+## 5. 拼接数字组成的最大数
+
+给定一组正整数 nums，重新排列它们的顺序，然后按顺序拼接，能组成的最大数
+
+把数组转字符串，字符串排序，需要新定义一个排序规则用来比较 concat(s1,s2) 与 concat(s2,s1)
+
+```python
+import functools
+
+def largestNumber(nums):
+    return ''.join(sorted(map(str, nums), key=functools.cmp_to_key(compare), reverse=True))
+
+def compare(a, b):
+    ab = a + b
+    ba = b + a
+    if ab < ba:
+        return -1
+    elif ab > ba:
+        return 1
+    else:
+        return 0
 ```

@@ -1,10 +1,40 @@
 # Dynamic Programming Questions
 
-## 1. 背包问题
+## 1. 连续子数组
+
+#### a. 连续子数组的最大和
+
+给定一个数组，求所有的连续子数组中，和最大的那个
+
+`O(n)` 直接从左到右滑，假设当前到数字 num，已经积累的最大和 max_now，如果 max_num+num < num，直接抛弃之前的数。状态转移函数 `max_now = max(max_now + num, num)`
+
+```python
+max_overall = max_now = nums[0]  
+for num in nums[1:]:  
+   max_now = max(max_now + num, num)  
+   if max_now > max_overall: max_overall = max_now
+```
+
+#### b. 连续子数组的最大积
+
+给定一个数组，求所有的连续子数组中，乘积最大的那个
+
+`O(n)` 类似上面，但是由于乘积有正负，目前积累的最大正数乘一个负数后会变成一个最小负数，所以需要两个数字分别记录目前的最大和最小值，状态转移函数 `max_now = max(max_now * num, min_now * num, num)`
+
+```python
+max_overall = max_now = min_now = nums[0]
+for num in nums[1:]:
+    max_now, min_now = max(max_now * num, min_now * num, num), min(max_now * num, min_now * num, num)
+    if max_now > max_overall: max_overall = max_now
+```
+
+## 2. 背包问题
 
 背包问题：有一个背包，背包承重有限。有一堆物品，每个物品有各自的重量与价值。求能放进背包里面的物品的最大总价值
 
-**完全背包问题**：每种物品可以使用无限次
+#### a. 完全背包问题
+
+每种物品可以使用无限次
 
 `O(n*m)` 假设把第 i 件物品放进空间 j 的包中，状态转移函数 `f[j] = max(f[j], f[j-weight[i]] + value[i])`
 
@@ -18,7 +48,9 @@ for i in range(1, n+1):
         f[j] = max(f[j], f[j-weight[i]] + value[i])
 ```
 
-**01背包问题**：每种物品仅可使用一次
+#### b. 0-1背包问题
+
+每种物品仅可使用一次
 
 `O(n*m)` 二维数组，通过第一维来防止重复使用，状态转移函数 `f[i][j] = max(f[i-1][j], f[i-1][j-weights[i]] + values[i])`
 
@@ -39,9 +71,11 @@ for i in range(1, n+1):
         f[j] = max(f[j], f[j-weight[i]] + value[i])
 ```
 
-**多重背包问题**：每种物品可使用有限次，转化成01背包问题即可
+#### c. 多重背包问题
 
-## 2. 编辑距离
+每种物品可使用有限次，转化成01背包问题即可
+
+## 3. 编辑距离
 
 求两个字符串的编辑距离，编辑分三种：增加，删除，修改
 
@@ -60,7 +94,38 @@ def Levenshtein_Distance(str1, str2):
     return dp[len(str1)][len(str2)]
 ```
 
-## 3. 最长上升子序列
+## 4. 买卖股票
+
+给定一个数组，表示一支股票一段时间来每天的价格，无限次买卖，求最大收益
+
+#### a. 无冷冻期
+
+只要后一天比前一天价格高，当天买隔天卖，就算赚
+
+```python
+profit = 0
+for i in range(1, len(prices)):
+    profit += max(price[i] - price[i-1], 0)
+```
+
+#### b. 有冷冻期
+
+每次卖完，需要冷冻期一天，才能再买
+
+对于每天，共有三个可能状态：买、卖、冷冻，分别用数组表示，其中 buy[i], sell[i], cool[i] 分别表示在第 i 天执行买、卖、冷冻操作可带来的最大收益
+
+随着时间推进，三种状态互相跳转，真正的**状态转移**
+
+```python
+buy, sell, cool = [0] * len(prices), [0] * len(prices), [0] * len(prices)
+buy[0] = -prices[0]
+for i in range(1, len(prices)):
+    buy[i] = max(cool[i-1] - prices[i], buy[i-1]) # 冷冻状态 -> 买状态
+    sell[i] = max(buy[i-1] + prices[i], sell[i-1]) # 买状态 -> 卖状态
+    cool[i] = sell[i-1] # 卖状态 -> 冷冻状态
+```
+
+## 5. 最长上升子序列
 
 找到数组中最长的数值递增的子序列（子序列 ≠ 子串，不一定是连续的）
 
@@ -76,7 +141,7 @@ def lengthOfLIS(nums):
             b[find(b, num)] = num
     return len(b)
 
-def find(nums,obj):
+def find(nums, obj):
     l = 0
     r = len(nums) - 1
     while l <= r:
@@ -88,11 +153,11 @@ def find(nums,obj):
     return l
 ```
 
-## 4. 最长回文子串
+## 6. 最长回文子串
 
 给定字符串 s，找到 s 中最长的回文子串
 
-`O(n)` 马拉车算法，从左往右走，设 center 与 right 为已经发现的最靠右的回文串的中心与右边界，i 关于 center 的镜像点为 2\*center-i，则 `p[i]=p[2*center-i]`，如果 i 超出了 right，则从 i 开始重新扩张找回文串
+`O(n)` **马拉车算法**，从左往右走，设 center 与 right 为已经发现的最靠右的回文串的中心与右边界，i 关于 center 的镜像点为 2\*center-i，则 `p[i]=p[2*center-i]`，如果 i 超出了 right，则从 i 开始重新扩张找回文串
 
 ```python
 def longestPalindrome(self,s):
