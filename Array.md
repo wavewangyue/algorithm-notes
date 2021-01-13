@@ -200,3 +200,47 @@ def compare(a, b):
     else:
         return 0
 ```
+
+## 6. 柱状图中的最大矩形
+
+给定一个正整数组，用来表示柱状图中各个柱子的高度。每个柱子宽度为 1 且彼此相邻。求柱状图中能圈出来的最大矩形的面积
+
+> 举例，假设给定数组 [2,1,5,4,2,3]，画出来的柱状图是这样的：  
+> □ □ ■ □ □ □  
+> □ □ ■ ■ □ □  
+> □ □ ■ ■ □ ■  
+> ■ □ ■ ■ ■ ■  
+> ■ ■ ■ ■ ■ ■  
+> 图中能圈出来的最大矩形面积是 8
+
+维护两个数组 left 与 right，其中 left[i] 和 right[i] 分别表示：按 i 这个位置这个高度往左右扩，能达到的左边界和右边界
+
+所以 `heights[j] >= heights[i], for j in range(left[i], i)`，即：left[i] 是从 i 开始往左离它最近的、高度小于它的柱子
+
+为了提升效率，通过**单调栈**来辅助完成，当遍历到 i 时，将栈中 `heights[v] > heights[i]` 的所有元素 v 出栈，i 再进栈
+
+```python
+def largestRectangleArea(self, heights: List[int]) -> int:
+    left = [None] * len(heights)
+    right = [None] * len(heights)
+    # 从左到右遍历一遍记录 left[]
+    stack = []
+    for i in range(len(heights)):
+        while stack != [] and heights[stack[-1]] >= heights[i]:
+            stack.pop()
+        left[i] = stack[-1] + 1 if stack != [] else 0
+        stack.append(i)
+    # 从右到左遍历一遍记录 right[]
+    stack = []
+    for i in range(len(heights)-1, -1, -1):
+        while stack != [] and heights[stack[-1]] >= heights[i]:
+            stack.pop()
+        right[i] = stack[-1] - 1 if stack != [] else len(heights)-1
+        stack.append(i)
+    # 最后遍历一次统计结果
+    max_size = 0
+    for i in range(len(heights)):
+        size = (right[i] - left[i] + 1) * heigh ts[i]
+        if size > max_size: max_size = size
+    return max_size
+```
