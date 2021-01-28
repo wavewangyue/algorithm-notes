@@ -169,7 +169,7 @@ for i in range(n):
 print(len(set([find_root(i) for i in range(n)])))
 ```
 
-## 5. 拓扑排序（判断图上是否有环）
+## 5. 图上是否有环（拓扑排序）
 
 如果是无向图
 1. 统计每个结点的度，忽略度为 0 的结点
@@ -208,4 +208,39 @@ while stack != []:
                 stack.append(node2)        
 # 如果有结点未访问到，则有环
 print(visited != n)
+```
+
+## 6. 二分图最大匹配（匈牙利算法）
+
+二分图：两组节点，节点只能跨组相连，组内节点均不互连
+
+最大匹配：两个相连的节点凑成一对，多对不能共享节点，最多能凑几对
+
+匈牙利算法：
+1. 遍历组 S1 中的每个节点 i，执行第 2 步
+2. 遍历组 S2 中与节点 i 相连的每个节点 j，如果 j 还没被配对，直接和 i 配对；如果 j 被配对了，执行第 3 步
+3. 对于 j 已经配对的对象 k，迭代执行第 2 步（相当于给 k 换个对象，如果能换就换，不能换就当无事发生，让 i 继续单身）
+
+```python
+
+s1 = ["a", "b", "c", "d"] # 第一组节点
+s2 = ["A", "B", "C", "D"] # 第二组节点
+m = [[1,1,0,0], [0,1,0,1], [1,0,1,0], [0,0,0,1]] # 邻接矩阵，m[i][j]表示组1的第i个节点和组2的第j个节点的连接关系
+partners = [-1] * len(s2) # 记录第二组每个节点的匹配对象
+flags = [False] * len(s2) # 访问记录标记
+
+def matching(i):
+    for j in range(len(s2)):
+        if (not flags[j]) and (m[i][j] == 1):
+            flags[j] = True
+            if partners[j] == -1 or matching(partners[j]): # 如果j还没配对，或者j的对象可以换个对象
+                partners[j] = i
+                return True
+    return False
+
+ct = 0
+for i in range(len(s1)):
+    flags = [False] * len(s2) # 每次从一个新的i出发，重置一下访问记录
+    if matching(i):
+        ct += 1
 ```
