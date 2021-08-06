@@ -182,7 +182,7 @@ def longestPalindrome(self,s):
     return s_plus[max_left:max_right+1].replace("#", "")
 ```
 
-## 7.和为K的连续子数组
+## 7. 和为K的连续子数组
 
 给定一个数组，在长度任意的所有连续子数组中，有多少个子数组的和正好为K
 
