@@ -140,7 +140,7 @@ n = len(matrix)
 roots = list(range(n)) # 记录每个结点的树根
 depths = [1] * n # 记录每颗树的深度，防止树过深，提高效率
 
-def find_root(): # 寻找树根
+def find_root(i): # 寻找树根
     if roots[i] == i:
         return i
     else:
