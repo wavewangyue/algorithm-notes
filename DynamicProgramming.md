@@ -188,7 +188,7 @@ def longestPalindrome(self,s):
 
 `O(n)` 不用遍历所有子数组。设 `f[i]=sum(0,i)` 则 `sum(i,j)=f[j]-f[i-1]` 那么只需要找 `f[j]-k=f[i]` 即可以，其中 j 是滑动指针，i是之前滑动过的位置
 
-```
+```python
 def subarraySumK(nums, k):
    sum2count = {0: 1}
    sum, ans = 0, 0
