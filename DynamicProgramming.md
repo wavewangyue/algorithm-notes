@@ -181,3 +181,21 @@ def longestPalindrome(self,s):
     max_right = max_center + p[max_center] - 1
     return s_plus[max_left:max_right+1].replace("#", "")
 ```
+
+## 7.和为K的连续子数组
+
+给定一个数组，在长度任意的所有连续子数组中，有多少个子数组的和正好为K
+
+`O(n)` 不用遍历所有子数组。设 `f[i]=sum(0,i)` 则 `sum(i,j)=f[j]-f[i-1]` 那么只需要找 `f[j]-k=f[i]` 即可以，其中 j 是滑动指针，i是之前滑动过的位置
+
+```
+def subarraySumK(nums, k):
+   sum2count = {0: 1}
+   sum, ans = 0, 0
+   for num in nums:
+      sum += num
+      if sum - k in sum2count:
+         ans += sum2count[sum-k]
+      sum2count[sum] = sum2count[sum] + 1 if sum in sum2count else 1
+   return ans
+```
